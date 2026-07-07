@@ -73,20 +73,6 @@ export function PosterHero({ billet }: { billet: Billet }) {
         <div className="absolute inset-0 bg-gradient-to-b from-[#efe7d7]/45 via-transparent to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#efe7d7]/60" />
 
-        {/* étiquette personnalisée scotchée, façon collage */}
-        <motion.div
-          className="absolute right-4 top-5 rotate-3 sm:right-10"
-          initial={{ opacity: 0, y: -12, rotate: 8 }}
-          animate={{ opacity: 1, y: 0, rotate: 3 }}
-          transition={{ duration: 0.7, delay: 1.2 }}
-        >
-          <div className="relative bg-[#fbf6ea] px-4 py-2 shadow-md">
-            <WashiTape className="absolute -top-3 left-1/2 h-6 w-20 -translate-x-1/2" rotate={-4} />
-            <p className="text-[10px] tracking-[0.28em] text-[#5c5343] uppercase">Invitation pour</p>
-            <p className="font-serif text-base leading-tight text-[#332e25]">{billet.nom_complet}</p>
-          </div>
-        </motion.div>
-
         {/* coup de pinceau « LE MARIAGE DE » ancré en bas de la photo */}
         <motion.div
           className="absolute bottom-6 left-1/2 z-10 w-[290px] -translate-x-1/2 sm:w-[360px]"
@@ -109,6 +95,21 @@ export function PosterHero({ billet }: { billet: Billet }) {
         {/* branche de fleurs séchées sur le bord gauche */}
         <DriedFlowers className="pointer-events-none absolute -left-10 -top-40 z-10 w-44 opacity-95 sm:-left-4 sm:w-56" />
         <WashiTape className="pointer-events-none absolute -left-14 bottom-16 z-10 h-10 w-32 sm:-left-6" rotate={-14} />
+
+        {/* étiquette personnalisée scotchée, façon collage — posée sur le papier,
+            jamais sur la photo, pour ne jamais recouvrir un visage. */}
+        <motion.div
+          className="relative z-20 mb-5 self-end rotate-3 sm:mb-6"
+          initial={{ opacity: 0, y: -12, rotate: 8 }}
+          animate={{ opacity: 1, y: 0, rotate: 3 }}
+          transition={{ duration: 0.7, delay: 1.2 }}
+        >
+          <div className="relative bg-[#fbf6ea] px-4 py-2 shadow-md">
+            <WashiTape className="absolute -top-3 left-1/2 h-6 w-20 -translate-x-1/2" rotate={-4} />
+            <p className="text-[10px] tracking-[0.28em] text-[#5c5343] uppercase">Invitation pour</p>
+            <p className="font-serif text-base leading-tight text-[#332e25]">{billet.nom_complet}</p>
+          </div>
+        </motion.div>
 
         <motion.h1
           className="font-script text-[clamp(2.7rem,10.5vw,5.5rem)] leading-[1.05] text-[#332e25]"
