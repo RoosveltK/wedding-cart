@@ -2,14 +2,14 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import { PosterHero } from "./PosterHero";
 import { ScrollConfetti } from "./ScrollConfetti";
-import { DriedFlowers, PaperGrain, SprigDivider, TornEdge, WashiTape } from "./decor";
+import { BrushStroke, DriedFlowers, PaperGrain, SprigDivider, TornEdge, WashiTape, PALETTE } from "./decor";
 import { buildGoogleCalendarUrl } from "@/lib/calendar";
-import { formatDateDots, formatPosterDate, formatTime } from "@/lib/format";
+import { formatDateDots, formatPosterDate } from "@/lib/format";
 import type { Database } from "@/lib/supabase/database.types";
 
 const DownloadPdfButton = dynamic(
@@ -59,6 +59,56 @@ function FloatingTicket({ billet, billetUrl }: { billet: Billet; billetUrl: stri
 
 type Billet = Database["public"]["Functions"]["get_billet"]["Returns"][number];
 
+/** Carte vidéo façon collage : ruban kraft, fleurs séchées et coup de pinceau autour du message des mariés. */
+function VideoMessage({ videoUrl }: { videoUrl: string }) {
+  const [playing, setPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  function handlePlay() {
+    setPlaying(true);
+    videoRef.current?.play().catch(() => {});
+  }
+
+  return (
+    <div className="relative mx-auto max-w-md">
+      <DriedFlowers className="pointer-events-none absolute -left-16 -top-12 w-28 rotate-[-18deg] opacity-90 sm:-left-20 sm:w-36" />
+      <DriedFlowers className="pointer-events-none absolute -right-14 -bottom-16 w-28 rotate-[160deg] opacity-90 sm:-right-16 sm:w-36" />
+      <WashiTape className="pointer-events-none absolute -top-4 left-10 z-10 h-8 w-24" rotate={-8} />
+      <WashiTape className="pointer-events-none absolute -bottom-4 right-10 z-10 h-8 w-24" rotate={9} />
+
+      <div className="relative rotate-[-1deg] bg-[#fbf6ea] p-3 pb-5 shadow-[0_16px_34px_rgba(51,46,37,0.22)]">
+        <BrushStroke className="pointer-events-none absolute -top-7 left-1/2 h-14 w-44 -translate-x-1/2" />
+        <p className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold tracking-[0.3em] text-[#f6efe2] uppercase">
+          À regarder
+        </p>
+
+        <div className="relative aspect-[9/16] max-h-[70vh] overflow-hidden bg-black">
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            controls={playing}
+            playsInline
+            className="h-full w-full object-contain"
+          />
+          {!playing && (
+            <button
+              onClick={handlePlay}
+              aria-label="Lire le message des mariés"
+              className="absolute inset-0 flex items-center justify-center bg-black/25 transition hover:bg-black/35"
+            >
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#fbf6ea]/95 shadow-lg">
+                <svg viewBox="0 0 24 24" className="ml-1 h-6 w-6" fill={PALETTE.ink} aria-hidden>
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const reveal = {
   hidden: { opacity: 0, y: 32 },
   show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" as const } },
@@ -84,7 +134,9 @@ function Section({
         whileInView="show"
         viewport={{ once: true, margin: "-80px" }}
       >
-        <h2 className="text-center font-script text-5xl text-[#332e25]">{title}</h2>
+        <h2 className="text-center font-script text-[clamp(2.4rem,8vw,3rem)] leading-tight text-[#332e25]">
+          {title}
+        </h2>
         <SprigDivider className="mx-auto mt-4 h-8 w-52" />
         <div className="mt-10">{children}</div>
       </motion.div>
@@ -108,8 +160,8 @@ function LinkButton({
       rel="noopener noreferrer"
       className={
         solid
-          ? "w-full rounded-sm bg-[#332e25] px-4 py-3 text-center text-[11px] tracking-[0.25em] text-[#f6efe2] uppercase transition hover:bg-[#4a4335]"
-          : "w-full rounded-sm border border-[#8a7360] px-4 py-3 text-center text-[11px] tracking-[0.25em] text-[#5c5343] uppercase transition hover:bg-[#8a7360]/10"
+          ? "w-full rounded-sm bg-[#24439c] px-4 py-3 text-center text-[11px] tracking-[0.25em] text-[#f6efe2] uppercase transition hover:bg-[#1a3277]"
+          : "w-full rounded-sm border border-[#24439c] px-4 py-3 text-center text-[11px] tracking-[0.25em] text-[#24439c] uppercase transition hover:bg-[#24439c]/10"
       }
     >
       {children}
@@ -135,10 +187,21 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
     : null;
 
   const programme = [
-    { heure: billet.date_debut ? formatTime(billet.date_debut) : "•", titre: "Accueil & cérémonie", detail: "Nous échangeons nos vœux entourés de ceux que nous aimons." },
-    { heure: "•", titre: "Cocktail doré", detail: "Bulles, sourires et photos sous les guirlandes lumineuses." },
-    { heure: "•", titre: "Dîner festif", detail: "Un repas à partager, des toasts et quelques surprises." },
-    { heure: "•", titre: "Soirée dansante", detail: "La piste est à vous jusqu'au bout de la nuit !" },
+    {
+      heure: "10h00",
+      titre: "Cérémonie civile — Mairie d'Efoulan",
+      detail: "Diane et Martial se disent oui devant monsieur le maire, entourés de leurs familles et témoins.",
+    },
+    {
+      heure: "13h00",
+      titre: "Bénédictions nuptiales — Nsimeyong",
+      detail: "À la Salle du Royaume des Témoins de Jéhovah, suivies d'un casse-croûte partagé (pas de vin d'honneur).",
+    },
+    {
+      heure: "18h30",
+      titre: "Soirée festive — Safari Hôtel",
+      detail: "Dîner, toasts et piste de danse pour célébrer jusqu'au bout de la nuit !",
+    },
   ];
 
   return (
@@ -195,6 +258,13 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
         )}
       </Section>
 
+      {/* ——— Message vidéo des mariés ——— */}
+      {billet.video_url && (
+        <Section id="message" title="Les mariés vous disent quelque chose">
+          <VideoMessage videoUrl={billet.video_url} />
+        </Section>
+      )}
+
       {/* ——— Programme ——— */}
       <Section id="programme" title="La célébration" tinted>
         <TornEdge className="pointer-events-none absolute left-0 top-0 h-8 w-full" fill="#efe7d7" flip />
@@ -208,15 +278,24 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: i * 0.12 }}
             >
-              <span className="absolute -left-[41px] top-1 flex h-5 w-5 items-center justify-center rounded-full border border-[#c8a862] bg-[#efe7d7]">
-                <span className="h-2 w-2 rounded-full bg-[#c8a862]" />
+              <span className="absolute -left-[41px] top-1 flex h-5 w-5 items-center justify-center rounded-full border border-[#e0af2e] bg-[#efe7d7]">
+                <span className="h-2 w-2 rounded-full bg-[#e0af2e]" />
               </span>
-              <p className="text-[10px] tracking-[0.35em] text-[#8a7360] uppercase">{etape.heure}</p>
+              <p className="text-sm font-semibold tracking-[0.3em] text-[#24439c]">{etape.heure}</p>
               <p className="mt-1 font-serif text-xl font-semibold">{etape.titre}</p>
               <p className="mt-1 font-serif text-sm leading-relaxed text-[#5c5343]">{etape.detail}</p>
             </motion.li>
           ))}
         </ol>
+
+        {/* Consignes des mariés */}
+        <div className="mx-auto mt-12 max-w-lg border-l-4 border-[#24439c] bg-[#fbf6ea] px-6 py-5 shadow-sm">
+          <p className="text-[11px] font-semibold tracking-[0.3em] text-[#24439c] uppercase">À noter</p>
+          <p className="mt-2 font-serif text-sm leading-relaxed text-[#5c5343]">
+            Par égard pour les mariés, merci de vous abstenir de jet de riz et de farotage.
+            Votre présence et vos sourires sont les plus beaux des cadeaux.
+          </p>
+        </div>
         <TornEdge className="pointer-events-none absolute bottom-0 left-0 h-8 w-full" fill="#efe7d7" />
       </Section>
 
@@ -248,7 +327,7 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
             <span className="absolute -left-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#e7dcc6]" />
             <span className="absolute -right-3 top-1/2 h-6 w-6 -translate-y-1/2 rounded-full bg-[#e7dcc6]" />
 
-            <p className="text-[10px] tracking-[0.35em] text-[#8a7360] uppercase">Billet d&apos;entrée personnel</p>
+            <p className="text-[10px] font-semibold tracking-[0.35em] text-[#24439c] uppercase">Billet d&apos;entrée personnel</p>
             <p className="mt-3 font-script text-4xl">{billet.nom_complet}</p>
             {date && (
               <p className="mt-2 font-serif text-xs tracking-[0.25em] text-[#5c5343]">
@@ -259,8 +338,8 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
             <div className="my-7 border-t border-dashed border-[#8a7360]/50" />
 
             <div className="flex justify-center">
-              <div className="rounded-sm border border-[#c8a862]/60 bg-white p-3">
-                <QRCodeSVG value={billetUrl} size={132} fgColor="#332e25" bgColor="#ffffff" />
+              <div className="rounded-sm border-2 border-[#e0af2e] bg-white p-3">
+                <QRCodeSVG value={billetUrl} size={132} fgColor="#1a3277" bgColor="#ffffff" />
               </div>
             </div>
             <p className="mt-4 text-[10px] tracking-[0.25em] text-[#8a7360] uppercase">

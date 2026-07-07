@@ -7,12 +7,12 @@ import { DriedFlowers, PaperGrain, WashiTape, PALETTE } from "@/components/site/
 /** Étincelles dorées qui scintillent doucement autour de l'enveloppe. */
 function Twinkles() {
   const stars = [
-    { left: "16%", top: "22%", size: 8, delay: 0 },
-    { left: "80%", top: "18%", size: 6, delay: 0.9 },
-    { left: "12%", top: "68%", size: 6, delay: 1.6 },
-    { left: "86%", top: "60%", size: 9, delay: 0.4 },
-    { left: "70%", top: "80%", size: 5, delay: 2.1 },
-    { left: "28%", top: "38%", size: 5, delay: 1.2 },
+    { left: "16%", top: "22%", size: 8, delay: 0, tone: PALETTE.or },
+    { left: "80%", top: "18%", size: 6, delay: 0.9, tone: PALETTE.royal },
+    { left: "12%", top: "68%", size: 6, delay: 1.6, tone: PALETTE.royal },
+    { left: "86%", top: "60%", size: 9, delay: 0.4, tone: PALETTE.or },
+    { left: "70%", top: "80%", size: 5, delay: 2.1, tone: PALETTE.or },
+    { left: "28%", top: "38%", size: 5, delay: 1.2, tone: PALETTE.royal },
   ];
   return (
     <div className="pointer-events-none absolute inset-0" aria-hidden>
@@ -27,7 +27,7 @@ function Twinkles() {
         >
           <path
             d="M12 2 C13 8 16 11 22 12 C16 13 13 16 12 22 C11 16 8 13 2 12 C8 11 11 8 12 2 Z"
-            fill={PALETTE.gold}
+            fill={s.tone}
           />
         </motion.svg>
       ))}
@@ -59,7 +59,7 @@ export function Envelope({
       <Twinkles />
 
       <div className="relative space-y-2">
-        <p className="text-xs tracking-[0.3em] text-[#8a7360] uppercase">Invitation pour</p>
+        <p className="text-xs font-semibold tracking-[0.3em] text-[#24439c] uppercase">Invitation pour</p>
         <p className="font-serif text-2xl text-[#332e25]">{guestName}</p>
       </div>
 
@@ -70,14 +70,14 @@ export function Envelope({
       >
         <div className="relative h-[150px] w-[220px]">
           <svg width="220" height="150" viewBox="0 0 220 150" fill="none" className="absolute inset-0">
-            <rect x="2" y="2" width="216" height="146" rx="4" fill="#fffdf8" stroke="#c8a862" strokeWidth="1.5" />
-            <path d="M4 6 L110 92 L216 6" stroke="#c8a862" strokeWidth="1.5" fill="none" />
+            <rect x="2" y="2" width="216" height="146" rx="4" fill="#fffdf8" stroke="#e0af2e" strokeWidth="1.8" />
+            <path d="M4 6 L110 92 L216 6" stroke="#e0af2e" strokeWidth="1.8" fill="none" />
           </svg>
           <WaxSeal size={64} className="absolute left-1/2 top-[80px] -translate-x-1/2 -translate-y-1/2 drop-shadow-md" />
         </div>
       </motion.div>
 
-      <p className="relative text-xs tracking-[0.25em] text-[#8a7360] uppercase animate-pulse">
+      <p className="relative rounded-full bg-[#24439c] px-6 py-3 text-xs font-semibold tracking-[0.25em] text-[#fdf8ec] uppercase animate-pulse">
         Toucher pour ouvrir
       </p>
 

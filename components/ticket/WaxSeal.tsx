@@ -9,9 +9,9 @@ export function WaxSeal({ size = 72, className }: { size?: number; className?: s
     >
       <defs>
         <radialGradient id="waxBody" cx="38%" cy="32%" r="75%">
-          <stop offset="0%" stopColor="#a83a3a" />
-          <stop offset="55%" stopColor="#7a1f1f" />
-          <stop offset="100%" stopColor="#4d1010" />
+          <stop offset="0%" stopColor="#3a5cc0" />
+          <stop offset="55%" stopColor="#24439c" />
+          <stop offset="100%" stopColor="#14265c" />
         </radialGradient>
         <radialGradient id="waxShine" cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#ffffff" stopOpacity="0.35" />
@@ -39,8 +39,8 @@ export function WaxSeal({ size = 72, className }: { size?: number; className?: s
       <ellipse cx="46" cy="40" rx="30" ry="20" fill="url(#waxShine)" />
 
       {/* Anneaux gravés */}
-      <circle cx="60" cy="60" r="38" fill="none" stroke="#3a0c0c" strokeOpacity="0.5" strokeWidth="1" />
-      <circle cx="60" cy="60" r="33" fill="none" stroke="#e8d5b0" strokeOpacity="0.55" strokeWidth="0.75" />
+      <circle cx="60" cy="60" r="38" fill="none" stroke="#0f1c45" strokeOpacity="0.5" strokeWidth="1" />
+      <circle cx="60" cy="60" r="33" fill="none" stroke="#e0af2e" strokeOpacity="0.7" strokeWidth="0.75" />
 
       {/* Petits motifs floraux évoquant une rosette gravée */}
       {[0, 60, 120, 180, 240, 300].map((angle) => (
@@ -50,8 +50,8 @@ export function WaxSeal({ size = 72, className }: { size?: number; className?: s
           cy="34"
           rx="4"
           ry="7"
-          fill="#e8d5b0"
-          fillOpacity="0.18"
+          fill="#e0af2e"
+          fillOpacity="0.28"
           transform={`rotate(${angle} 60 60)`}
         />
       ))}
@@ -61,7 +61,7 @@ export function WaxSeal({ size = 72, className }: { size?: number; className?: s
         y="68"
         textAnchor="middle"
         fontSize="22"
-        fill="#e8d5b0"
+        fill="#e0af2e"
         fontFamily="Georgia, 'Times New Roman', serif"
         fontStyle="italic"
         letterSpacing="1"

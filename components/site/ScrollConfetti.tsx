@@ -13,7 +13,8 @@ type Particle = {
   shape: "petal" | "dot" | "ribbon";
 };
 
-const COLORS = ["#c8a862", "#d29a6b", "#ede0b7", "#8a7360", "#e8b4b8", "#b9a05c"];
+// Dominance jaune-or et bleu royal (couleurs du mariage), relevés de tons papier
+const COLORS = ["#e0af2e", "#24439c", "#c8a862", "#ede0b7", "#3a5cc0", "#d29a6b"];
 
 let nextId = 0;
 

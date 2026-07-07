@@ -133,7 +133,7 @@ export function PosterHero({ billet }: { billet: Billet }) {
             </p>
             <div className="flex items-center justify-center gap-5 font-serif text-[#332e25]">
               <span className="text-xs tracking-[0.35em]">{date.weekday}</span>
-              <span className="border-x border-[#33302599] px-5 py-1 text-4xl font-semibold">
+              <span className="border-x border-[#33302599] px-5 py-1 text-4xl font-semibold text-[#24439c]">
                 {date.day}
               </span>
               <span className="text-xs tracking-[0.35em]">À {date.time}</span>
@@ -156,46 +156,50 @@ export function PosterHero({ billet }: { billet: Billet }) {
 
         <motion.a
           href="#maries"
-          className="group mt-auto flex flex-col items-center gap-3 pt-10"
+          className="group mt-auto flex flex-col items-center gap-2 pt-10"
           variants={rise}
           initial="hidden"
           animate="show"
           custom={3}
         >
-          {/* étincelles qui scintillent de part et d'autre de l'invitation à défiler */}
-          <span className="flex items-center gap-3 text-[10px] tracking-[0.35em] text-[#8a7360] uppercase">
+          {/* Gros bouton bien lisible, aux couleurs du mariage, qui invite à descendre */}
+          <motion.span
+            className="flex items-center gap-3 rounded-full border-2 border-[#e0af2e] bg-[#24439c] px-7 py-4 text-sm font-semibold tracking-[0.12em] text-[#fdf8ec] uppercase shadow-[0_12px_28px_rgba(26,50,119,0.4)] transition group-hover:bg-[#1a3277]"
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
             <motion.svg
               viewBox="0 0 24 24"
-              className="h-4 w-4"
-              animate={{ opacity: [0.2, 1, 0.2], scale: [0.7, 1.2, 0.7], rotate: [0, 20, 0] }}
+              className="h-5 w-5"
+              animate={{ opacity: [0.4, 1, 0.4], rotate: [0, 25, 0] }}
               transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
               aria-hidden
             >
-              <path d="M12 2 C13 8 16 11 22 12 C16 13 13 16 12 22 C11 16 8 13 2 12 C8 11 11 8 12 2 Z" fill={PALETTE.gold} />
+              <path d="M12 2 C13 8 16 11 22 12 C16 13 13 16 12 22 C11 16 8 13 2 12 C8 11 11 8 12 2 Z" fill={PALETTE.or} />
             </motion.svg>
-            La fête continue plus bas
+            Découvrir la suite
             <motion.svg
               viewBox="0 0 24 24"
-              className="h-4 w-4"
-              animate={{ opacity: [0.2, 1, 0.2], scale: [0.7, 1.2, 0.7], rotate: [0, -20, 0] }}
+              className="h-5 w-5"
+              animate={{ opacity: [0.4, 1, 0.4], rotate: [0, -25, 0] }}
               transition={{ duration: 2.2, delay: 1.1, repeat: Infinity, ease: "easeInOut" }}
               aria-hidden
             >
-              <path d="M12 2 C13 8 16 11 22 12 C16 13 13 16 12 22 C11 16 8 13 2 12 C8 11 11 8 12 2 Z" fill={PALETTE.gold} />
+              <path d="M12 2 C13 8 16 11 22 12 C16 13 13 16 12 22 C11 16 8 13 2 12 C8 11 11 8 12 2 Z" fill={PALETTE.or} />
             </motion.svg>
-          </span>
+          </motion.span>
 
-          {/* double chevron doré qui descend en cascade */}
-          <span className="relative flex h-8 flex-col items-center" aria-hidden>
+          {/* grande flèche dorée qui descend, impossible à manquer */}
+          <span className="relative flex h-12 flex-col items-center pt-1" aria-hidden>
             {[0, 1].map((i) => (
               <motion.svg
                 key={i}
-                viewBox="0 0 24 12"
-                className="h-3 w-6"
-                animate={{ y: [0, 7, 0], opacity: [0.25, 1, 0.25] }}
+                viewBox="0 0 32 14"
+                className="h-4 w-9"
+                animate={{ y: [0, 9, 0], opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 1.6, delay: i * 0.25, repeat: Infinity, ease: "easeInOut" }}
               >
-                <path d="M2 2 L12 10 L22 2" fill="none" stroke={PALETTE.gold} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M3 2 L16 12 L29 2" fill="none" stroke={PALETTE.or} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
               </motion.svg>
             ))}
           </span>

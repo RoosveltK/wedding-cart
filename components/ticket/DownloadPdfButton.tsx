@@ -58,7 +58,7 @@ export function DownloadPdfButton({ billet, billetUrl }: { billet: Billet; bille
     <button
       onClick={download}
       disabled={!ready || generating}
-      className="w-full rounded-sm bg-[#8a7360] px-4 py-3 text-[11px] tracking-[0.25em] text-[#f6efe2] uppercase transition hover:bg-[#6f5a49] disabled:opacity-50"
+      className="w-full rounded-sm bg-[#24439c] px-4 py-3 text-[11px] tracking-[0.25em] text-[#f6efe2] uppercase transition hover:bg-[#1a3277] disabled:opacity-50"
     >
       {generating ? "Génération..." : "Télécharger mon billet (PDF)"}
     </button>
@@ -80,7 +80,7 @@ export function FloatingDownloadButton({
       onClick={download}
       disabled={!ready || generating}
       aria-label="Télécharger mon billet en PDF"
-      className="pointer-events-auto flex items-center gap-2 rounded-full bg-[#332e25] py-3 pl-4 pr-5 text-[10px] tracking-[0.2em] text-[#f6efe2] uppercase shadow-[0_10px_24px_rgba(51,46,37,0.4)] transition hover:bg-[#4a4335] disabled:opacity-60"
+      className="pointer-events-auto flex items-center gap-2 rounded-full border border-[#e0af2e] bg-[#24439c] py-3 pl-4 pr-5 text-[10px] tracking-[0.2em] text-[#f6efe2] uppercase shadow-[0_10px_24px_rgba(26,50,119,0.45)] transition hover:bg-[#1a3277] disabled:opacity-60"
     >
       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
         <path d="M12 3v12m0 0 4-4m-4 4-4-4" />

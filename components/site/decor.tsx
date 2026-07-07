@@ -14,6 +14,10 @@ export const PALETTE = {
   bloom: "#ede0b7",
   bloomDeep: "#d8c68e",
   stem: "#8f8055",
+  // Couleurs du mariage : bleu royal & jaune-or
+  royal: "#24439c",
+  royalDeep: "#1a3277",
+  or: "#e0af2e",
 };
 
 /** Bord de papier déchiré, à poser au-dessus d'une photo (pointe vers le haut). */

@@ -4,16 +4,11 @@ import { use, useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { Envelope } from "@/components/ticket/Envelope";
-import { VideoStage } from "@/components/ticket/VideoStage";
 import { WeddingSite } from "@/components/site/WeddingSite";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Billet = Database["public"]["Functions"]["get_billet"]["Returns"][number];
-type Stage = "loading" | "not-found" | "envelope" | "video" | "ticket";
-
-function watchedKey(token: string) {
-  return `billet_watched_${token}`;
-}
+type Stage = "loading" | "not-found" | "envelope" | "ticket";
 
 export default function BilletPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = use(params);
@@ -36,16 +31,6 @@ export default function BilletPage({ params }: { params: Promise<{ token: string
   }, [token]);
 
   function handleOpenEnvelope() {
-    const alreadyWatched = typeof window !== "undefined" && localStorage.getItem(watchedKey(token));
-    if (alreadyWatched || !billet?.video_url) {
-      setStage("ticket");
-      return;
-    }
-    setStage("video");
-  }
-
-  function handleVideoDone() {
-    localStorage.setItem(watchedKey(token), "1");
     setStage("ticket");
   }
 
@@ -65,9 +50,6 @@ export default function BilletPage({ params }: { params: Promise<{ token: string
     <AnimatePresence mode="wait">
       {stage === "envelope" && (
         <Envelope key="envelope" guestName={billet.nom_complet} onOpen={handleOpenEnvelope} />
-      )}
-      {stage === "video" && billet.video_url && (
-        <VideoStage key="video" videoUrl={billet.video_url} onDone={handleVideoDone} />
       )}
       {stage === "ticket" && (
         <WeddingSite
