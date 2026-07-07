@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { pdf } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { InvitationPdf } from "./InvitationPdf";
+import { guestbookUrl } from "@/lib/guestbook";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Billet = Database["public"]["Functions"]["get_billet"]["Returns"][number];
@@ -21,21 +22,36 @@ async function toDataUrl(url: string): Promise<string> {
 /** Prépare le QR + la photo puis génère le billet PDF à la demande. */
 export function useBilletPdf(billet: Billet, billetUrl: string) {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [guestbookQrDataUrl, setGuestbookQrDataUrl] = useState<string | null>(null);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     QRCode.toDataURL(billetUrl, { margin: 1, width: 300 }).then(setQrDataUrl);
+    // QR du livre d'or : arrive sur /livre-dor avec le code de l'invité pré-rempli.
+    try {
+      const url = guestbookUrl(new URL(billetUrl).origin, billet.code);
+      QRCode.toDataURL(url, { margin: 1, width: 300, color: { dark: "#1a3277" } })
+        .then(setGuestbookQrDataUrl)
+        .catch(() => setGuestbookQrDataUrl(null));
+    } catch {
+      setGuestbookQrDataUrl(null);
+    }
     // La photo est optionnelle : si le chargement échoue, le PDF sort sans elle.
     toDataUrl("/images/maries.jpg").then(setPhotoDataUrl).catch(() => setPhotoDataUrl(null));
-  }, [billetUrl]);
+  }, [billetUrl, billet.code]);
 
   const download = useCallback(async () => {
     if (!qrDataUrl) return;
     setGenerating(true);
     try {
       const blob = await pdf(
-        <InvitationPdf billet={billet} qrDataUrl={qrDataUrl} photoDataUrl={photoDataUrl} />,
+        <InvitationPdf
+          billet={billet}
+          qrDataUrl={qrDataUrl}
+          guestbookQrDataUrl={guestbookQrDataUrl}
+          photoDataUrl={photoDataUrl}
+        />,
       ).toBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -46,7 +62,7 @@ export function useBilletPdf(billet: Billet, billetUrl: string) {
     } finally {
       setGenerating(false);
     }
-  }, [billet, billetUrl, qrDataUrl, photoDataUrl]);
+  }, [billet, billetUrl, qrDataUrl, guestbookQrDataUrl, photoDataUrl]);
 
   return { ready: Boolean(qrDataUrl), generating, download };
 }

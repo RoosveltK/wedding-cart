@@ -17,6 +17,16 @@ function toLocalInputValue(iso: string | null) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+/** Petit intitulé de sous-section du formulaire. */
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-2 text-[11px] font-semibold tracking-[0.18em] text-[#24439c] uppercase">
+      {children}
+      <span aria-hidden className="h-px flex-1 bg-[#f0ebdd]" />
+    </p>
+  );
+}
+
 export function EventForm() {
   const supabase = createClient();
   const [event, setEvent] = useState<EventRow | null>(null);
@@ -90,7 +100,7 @@ export function EventForm() {
   if (loading) {
     return (
       <Card className="p-6">
-        <p className="text-sm text-neutral-500">Chargement...</p>
+        <p className="text-sm text-[#8a7f6a]">Chargement...</p>
       </Card>
     );
   }
@@ -111,85 +121,107 @@ export function EventForm() {
         title="Événement"
         description="Ces informations sont utilisées sur chaque billet et pour l'ajout à Google Agenda."
       />
-      <form onSubmit={handleSubmit} className="space-y-6 px-6 py-5">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <form onSubmit={handleSubmit} className="space-y-7 px-6 py-6">
+        {/* ——— Les mariés ——— */}
+        <div className="space-y-4">
+          <SectionLabel>Les mariés</SectionLabel>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextField
+              label="Prénom de la mariée"
+              value={event.nom_mariee ?? ""}
+              onChange={(e) => setEvent({ ...event, nom_mariee: e.target.value })}
+            />
+            <TextField
+              label="Prénom du marié"
+              value={event.nom_marie ?? ""}
+              onChange={(e) => setEvent({ ...event, nom_marie: e.target.value })}
+            />
+          </div>
           <TextField
-            label="Prénom de la mariée"
-            value={event.nom_mariee ?? ""}
-            onChange={(e) => setEvent({ ...event, nom_mariee: e.target.value })}
-          />
-          <TextField
-            label="Prénom du marié"
-            value={event.nom_marie ?? ""}
-            onChange={(e) => setEvent({ ...event, nom_marie: e.target.value })}
-          />
-        </div>
-
-        <TextField
-          label="Titre"
-          description="Utilisé comme intitulé de l'événement dans Google Agenda."
-          value={event.titre ?? ""}
-          onChange={(e) => setEvent({ ...event, titre: e.target.value })}
-        />
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <TextField
-            label="Date et heure de début"
-            type="datetime-local"
-            value={toLocalInputValue(event.date_debut)}
-            onChange={(e) =>
-              setEvent({
-                ...event,
-                date_debut: e.target.value ? new Date(e.target.value).toISOString() : null,
-              })
-            }
-          />
-          <TextField
-            label="Date et heure de fin"
-            description="Optionnel"
-            type="datetime-local"
-            value={toLocalInputValue(event.date_fin)}
-            onChange={(e) =>
-              setEvent({
-                ...event,
-                date_fin: e.target.value ? new Date(e.target.value).toISOString() : null,
-              })
-            }
+            label="Titre"
+            description="Utilisé comme intitulé de l'événement dans Google Agenda."
+            value={event.titre ?? ""}
+            onChange={(e) => setEvent({ ...event, titre: e.target.value })}
           />
         </div>
 
-        <TextField
-          label="Lieu"
-          value={event.lieu ?? ""}
-          onChange={(e) => setEvent({ ...event, lieu: e.target.value })}
-        />
+        {/* ——— Date & lieu ——— */}
+        <div className="space-y-4">
+          <SectionLabel>Date &amp; lieu</SectionLabel>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextField
+              label="Date et heure de début"
+              type="datetime-local"
+              value={toLocalInputValue(event.date_debut)}
+              onChange={(e) =>
+                setEvent({
+                  ...event,
+                  date_debut: e.target.value ? new Date(e.target.value).toISOString() : null,
+                })
+              }
+            />
+            <TextField
+              label="Date et heure de fin"
+              description="Optionnel"
+              type="datetime-local"
+              value={toLocalInputValue(event.date_fin)}
+              onChange={(e) =>
+                setEvent({
+                  ...event,
+                  date_fin: e.target.value ? new Date(e.target.value).toISOString() : null,
+                })
+              }
+            />
+          </div>
+          <TextField
+            label="Lieu"
+            value={event.lieu ?? ""}
+            onChange={(e) => setEvent({ ...event, lieu: e.target.value })}
+          />
+        </div>
 
-        <TextAreaField
-          label="Description"
-          rows={3}
-          value={event.description ?? ""}
-          onChange={(e) => setEvent({ ...event, description: e.target.value })}
-        />
+        {/* ——— Message des mariés ——— */}
+        <div className="space-y-4">
+          <SectionLabel>Message des mariés</SectionLabel>
+          <TextAreaField
+            label="Description"
+            description="Citation affichée sur le billet, sous la présentation des mariés."
+            rows={3}
+            value={event.description ?? ""}
+            onChange={(e) => setEvent({ ...event, description: e.target.value })}
+          />
 
-        <div className="space-y-1.5">
-          <span className="block text-sm font-medium text-neutral-800">Vidéo des mariés</span>
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="cursor-pointer rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50">
-              Choisir un fichier vidéo
-              <input type="file" accept="video/mp4" onChange={handleVideoChange} className="hidden" />
-            </label>
-            {uploading && <span className="text-xs text-neutral-500">Envoi en cours...</span>}
-            {videoFileName && !uploading && (
-              <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600">
-                {videoFileName}
-              </span>
-            )}
+          <div className="rounded-xl border border-dashed border-[#e3dccb] bg-[#faf7f0]/60 px-4 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#24439c]/10 text-[#24439c]">
+                  <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                    <path d="m22 8-6 4 6 4V8Z" strokeLinecap="round" strokeLinejoin="round" />
+                    <rect x="2" y="6" width="14" height="12" rx="2" />
+                  </svg>
+                </span>
+                <div>
+                  <p className="text-sm font-medium text-[#4a4234]">Vidéo des mariés</p>
+                  <p className="text-xs text-[#8a7f6a]">
+                    {uploading
+                      ? "Envoi en cours..."
+                      : videoFileName
+                        ? videoFileName
+                        : "Aucune vidéo — le billet n'affichera pas la section « message »."}
+                  </p>
+                </div>
+              </div>
+              <label className="cursor-pointer rounded-lg border border-[#e3dccb] bg-white px-3.5 py-2 text-sm font-medium text-[#4a4234] transition hover:border-[#c8a862] hover:bg-[#faf7f0]">
+                {videoFileName ? "Remplacer" : "Choisir un fichier"}
+                <input type="file" accept="video/mp4" onChange={handleVideoChange} className="hidden" />
+              </label>
+            </div>
           </div>
         </div>
 
         {message && <Banner variant={message.type}>{message.text}</Banner>}
 
-        <div className="flex justify-end border-t border-neutral-100 pt-5">
+        <div className="flex justify-end border-t border-[#f0ebdd] pt-5">
           <Button type="submit" disabled={saving || uploading}>
             {saving ? "Enregistrement..." : "Enregistrer"}
           </Button>

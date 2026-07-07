@@ -308,7 +308,7 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
       </Section>
 
       {/* ——— Le lieu ——— */}
-      <Section id="lieu" title="Le lieu" nextId="billet" nextLabel="Voir votre billet">
+      <Section id="lieu" title="Le lieu" nextId="livredor" nextLabel="Signer le livre d'or">
         <div className="relative mx-auto max-w-md bg-[#fbf6ea] px-8 py-10 text-center shadow-[0_14px_30px_rgba(51,46,37,0.14)]">
           <DriedFlowers className="pointer-events-none absolute -right-8 -top-10 w-24 rotate-[140deg] opacity-80" />
           {date && (
@@ -322,6 +322,37 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
           <div className="mt-8 flex flex-col gap-3">
             {mapsUrl && <LinkButton href={mapsUrl} solid>Voir l&apos;itinéraire</LinkButton>}
             {calendarUrl && <LinkButton href={calendarUrl}>Ajouter à Google Agenda</LinkButton>}
+          </div>
+        </div>
+      </Section>
+
+      {/* ——— Le livre d'or ——— */}
+      <Section id="livredor" title="Le livre d'or" nextId="billet" nextLabel="Voir votre billet">
+        <div className="relative mx-auto max-w-md">
+          <DriedFlowers className="pointer-events-none absolute -left-12 -bottom-12 w-24 rotate-[24deg] opacity-80" />
+          <WashiTape className="pointer-events-none absolute -top-4 right-8 z-10 h-8 w-24" rotate={7} />
+
+          <div className="relative rotate-[0.8deg] bg-[#fbf6ea] px-8 py-10 text-center shadow-[0_14px_30px_rgba(51,46,37,0.16)]">
+            <p className="font-serif text-base leading-relaxed text-[#5c5343]">
+              Un mot doux, une anecdote, vos plus belles photos : laissez un souvenir aux mariés
+              dans leur livre d&apos;or.
+            </p>
+
+            <p className="mt-6 text-[10px] font-semibold tracking-[0.35em] text-[#8a7360] uppercase">
+              Votre code invité
+            </p>
+            <p className="mt-2 inline-block border-2 border-dashed border-[#e0af2e] bg-white px-6 py-2 font-serif text-2xl font-semibold tracking-[0.45em] text-[#24439c]">
+              {billet.code}
+            </p>
+
+            <div className="mt-8">
+              <a
+                href={`/livre-dor?code=${billet.code}`}
+                className="block w-full rounded-sm bg-[#24439c] px-4 py-3 text-[11px] tracking-[0.25em] text-[#f6efe2] uppercase transition hover:bg-[#1a3277]"
+              >
+                Ouvrir le livre d&apos;or
+              </a>
+            </div>
           </div>
         </div>
       </Section>
@@ -352,6 +383,9 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
             </div>
             <p className="mt-4 text-[10px] tracking-[0.25em] text-[#8a7360] uppercase">
               À présenter à l&apos;entrée
+            </p>
+            <p className="mt-2 text-[10px] tracking-[0.25em] text-[#8a7360] uppercase">
+              Code invité : <span className="font-semibold text-[#24439c]">{billet.code}</span>
             </p>
 
             <div className="mt-8">

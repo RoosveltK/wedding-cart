@@ -8,8 +8,9 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <EventForm />
+      {/* Les invités d'abord : c'est l'activité du quotidien ; l'événement se règle une fois. */}
       {event && <GuestsSection eventId={event.id} />}
+      <EventForm />
     </div>
   );
 }

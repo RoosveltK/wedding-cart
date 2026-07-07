@@ -71,16 +71,22 @@ export async function parseGuestFile(file: File): Promise<ImportedGuest[]> {
 }
 
 export function downloadGuestsExport(
-  guests: { nom_complet: string; telephone: string | null; table_nom: string | null; token: string }[],
+  guests: {
+    nom_complet: string;
+    telephone: string | null;
+    table_nom: string | null;
+    token: string;
+    code: string;
+  }[],
   billetUrl: (token: string) => string,
 ) {
   const wb = XLSX.utils.book_new();
   const rows = [
-    ["Nom complet", "Téléphone", "Table", "Lien du billet"],
-    ...guests.map((g) => [g.nom_complet, g.telephone ?? "", g.table_nom ?? "", billetUrl(g.token)]),
+    ["Nom complet", "Téléphone", "Table", "Code livre d'or", "Lien du billet"],
+    ...guests.map((g) => [g.nom_complet, g.telephone ?? "", g.table_nom ?? "", g.code, billetUrl(g.token)]),
   ];
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws["!cols"] = [{ wch: 30 }, { wch: 18 }, { wch: 16 }, { wch: 48 }];
+  ws["!cols"] = [{ wch: 30 }, { wch: 18 }, { wch: 16 }, { wch: 14 }, { wch: 48 }];
   XLSX.utils.book_append_sheet(wb, ws, "Invités");
   const out = XLSX.write(wb, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
   triggerDownload(out, "invites-diane-martial.xlsx");

@@ -33,42 +33,53 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-sm space-y-5 rounded-lg border border-neutral-200 bg-white p-8 shadow-sm"
-      >
-        <div className="text-center">
-          <h1 className="text-lg font-semibold text-neutral-900">Back-office</h1>
-          <p className="text-sm text-neutral-500">Diane &amp; Martial</p>
-        </div>
+    <main className="flex min-h-screen items-center justify-center bg-[#f7f4ec] px-4">
+      <div className="w-full max-w-sm">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5 overflow-hidden rounded-2xl border border-[#e8e2d2] bg-white p-8 shadow-[0_10px_30px_rgba(51,46,37,0.08)]"
+        >
+          <div className="text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#24439c] font-script text-2xl leading-none text-[#f6efe2] shadow-[0_0_0_3px_#ffffff,0_0_0_4.5px_#e0af2e]">
+              D&amp;M
+            </div>
+            <h1 className="mt-4 font-script text-4xl text-[#332e25]">Diane &amp; Martial</h1>
+            <p className="mt-1 text-[11px] tracking-[0.22em] text-[#8a7f6a] uppercase">
+              Espace des mariés
+            </p>
+          </div>
 
-        <TextField
-          label="Email"
-          id="email"
-          type="email"
-          required
-          autoComplete="username"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+          <TextField
+            label="Email"
+            id="email"
+            type="email"
+            required
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
-        <TextField
-          label="Mot de passe"
-          id="password"
-          type="password"
-          required
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <TextField
+            label="Mot de passe"
+            id="password"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-        {error && <Banner variant="error">{error}</Banner>}
+          {error && <Banner variant="error">{error}</Banner>}
 
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? "Connexion..." : "Se connecter"}
-        </Button>
-      </form>
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? "Connexion..." : "Se connecter"}
+          </Button>
+        </form>
+
+        <p className="mt-6 text-center text-[11px] tracking-[0.2em] text-[#b3a98f] uppercase">
+          25 juillet 2026 — Yaoundé
+        </p>
+      </div>
     </main>
   );
 }

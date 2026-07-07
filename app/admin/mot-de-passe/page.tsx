@@ -44,7 +44,10 @@ export default function ChangePasswordPage() {
   return (
     <div className="max-w-sm">
       <Card>
-        <CardHeader title="Changer le mot de passe" />
+        <CardHeader
+          title="Changer le mot de passe"
+          description="Au moins 8 caractères. La modification est immédiate."
+        />
         <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
           <TextField
             label="Nouveau mot de passe"

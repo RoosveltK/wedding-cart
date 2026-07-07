@@ -56,6 +56,7 @@ export type Database = {
       }
       guests: {
         Row: {
+          code: string
           created_at: string
           event_id: string
           id: string
@@ -65,6 +66,7 @@ export type Database = {
           token: string
         }
         Insert: {
+          code?: string
           created_at?: string
           event_id: string
           id?: string
@@ -74,6 +76,7 @@ export type Database = {
           token: string
         }
         Update: {
+          code?: string
           created_at?: string
           event_id?: string
           id?: string
@@ -92,6 +95,77 @@ export type Database = {
           },
         ]
       }
+      guestbook_entries: {
+        Row: {
+          created_at: string
+          guest_id: string
+          id: string
+          message: string | null
+        }
+        Insert: {
+          created_at?: string
+          guest_id: string
+          id?: string
+          message?: string | null
+        }
+        Update: {
+          created_at?: string
+          guest_id?: string
+          id?: string
+          message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guestbook_entries_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guestbook_photos: {
+        Row: {
+          created_at: string
+          entry_id: string
+          guest_id: string
+          id: string
+          path: string
+          size_bytes: number
+        }
+        Insert: {
+          created_at?: string
+          entry_id: string
+          guest_id: string
+          id?: string
+          path: string
+          size_bytes: number
+        }
+        Update: {
+          created_at?: string
+          entry_id?: string
+          guest_id?: string
+          id?: string
+          path?: string
+          size_bytes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guestbook_photos_entry_id_fkey"
+            columns: ["entry_id"]
+            isOneToOne: false
+            referencedRelation: "guestbook_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "guestbook_photos_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -100,6 +174,7 @@ export type Database = {
       get_billet: {
         Args: { p_token: string }
         Returns: {
+          code: string
           date_debut: string
           date_fin: string
           description: string
@@ -109,6 +184,20 @@ export type Database = {
           nom_mariee: string
           titre: string
           video_url: string
+        }[]
+      }
+      get_storage_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_guestbook: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          id: string
+          message: string | null
+          nom_complet: string
+          photos: string[]
         }[]
       }
     }

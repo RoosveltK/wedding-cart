@@ -172,28 +172,92 @@ const styles = StyleSheet.create({
     letterSpacing: 2.5,
     color: C.inkSoft,
     textTransform: "uppercase",
-    marginBottom: 3,
+    marginBottom: 2,
   },
   guestName: {
     fontFamily: "GreatVibes",
     fontSize: 24,
     color: C.royal,
-    marginBottom: 7,
+    marginBottom: 4,
+  },
+  qrRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    gap: 26,
+  },
+  qrBlock: {
+    alignItems: "center",
+    width: 108,
   },
   qr: {
-    width: 66,
-    height: 66,
-    padding: 4,
+    width: 60,
+    height: 60,
+    padding: 3,
     backgroundColor: "#ffffff",
     borderWidth: 1.4,
     borderColor: C.or,
   },
+  // QR du livre d'or : cadre pointillé or façon timbre, filet bleu royal, fleur séchée au coin.
+  qrGuestbookFrame: {
+    position: "relative",
+    padding: 3,
+    backgroundColor: "#fdf8ec",
+    borderWidth: 1.2,
+    borderColor: C.or,
+    borderStyle: "dashed",
+  },
+  qrGuestbook: {
+    width: 50,
+    height: 50,
+    padding: 3,
+    backgroundColor: "#ffffff",
+    borderWidth: 1.2,
+    borderColor: C.royal,
+  },
   qrHint: {
-    marginTop: 5,
+    marginTop: 3,
     fontSize: 6.5,
     letterSpacing: 2,
     color: C.royal,
     textTransform: "uppercase",
+  },
+  // Coupon central : le code invité présenté comme un petit billet à détacher,
+  // entre le QR d'entrée et le QR du livre d'or.
+  codeMid: {
+    width: 96,
+    alignSelf: "center",
+    alignItems: "center",
+  },
+  codeMidLabel: {
+    fontSize: 6,
+    letterSpacing: 1.8,
+    color: C.inkSoft,
+    textTransform: "uppercase",
+    marginBottom: 4,
+  },
+  codeChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: "#ffffff",
+    borderWidth: 1.2,
+    borderColor: C.or,
+    borderStyle: "dashed",
+  },
+  codeChipValue: {
+    fontSize: 12.5,
+    fontWeight: 600,
+    letterSpacing: 3.5,
+    color: C.royal,
+  },
+  codeMidHelp: {
+    marginTop: 4,
+    fontSize: 5.8,
+    letterSpacing: 1.2,
+    color: C.inkSoft,
+    textTransform: "uppercase",
+    textAlign: "center",
+    lineHeight: 1.5,
   },
 });
 
@@ -239,10 +303,12 @@ function PdfBloom({
 export function InvitationPdf({
   billet,
   qrDataUrl,
+  guestbookQrDataUrl,
   photoDataUrl,
 }: {
   billet: Billet;
   qrDataUrl: string;
+  guestbookQrDataUrl: string | null;
   photoDataUrl: string | null;
 }) {
   registerFonts();
@@ -395,17 +461,17 @@ export function InvitationPdf({
           </Svg>
         </View>
 
-        {/* Ornement or et bleu au-dessus du nom de l'invité */}
+        {/* Ornement or et bleu au-dessus du nom de l'invité, sous le lieu */}
         <View
           style={{
             position: "absolute",
             bottom: 148,
             left: (W - 170) / 2,
             width: 170,
-            height: 12,
+            height: 10,
           }}
         >
-          <Svg viewBox="0 0 220 16" style={{ width: 170, height: 12 }}>
+          <Svg viewBox="0 0 220 16" style={{ width: 170, height: 10 }}>
             <Line
               x1="10"
               y1="8"
@@ -428,13 +494,52 @@ export function InvitationPdf({
           </Svg>
         </View>
 
-        {/* Zone billet : nom de l'invité bien visible (billet unique) + QR */}
+        {/* Zone billet : nom de l'invité (billet unique), QR d'entrée + QR livre d'or avec le code */}
         <View style={styles.ticketZone}>
           <Text style={styles.guestEyebrow}>Billet personnel de</Text>
           <Text style={styles.guestName}>{billet.nom_complet}</Text>
-          {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer */}
-          <Image src={qrDataUrl} style={styles.qr} />
-          <Text style={styles.qrHint}>Billet unique</Text>
+          <View style={styles.qrRow}>
+            <View style={styles.qrBlock}>
+              {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer */}
+              <Image src={qrDataUrl} style={styles.qr} />
+              <Text style={styles.qrHint}>Billet unique</Text>
+            </View>
+
+            {guestbookQrDataUrl && (
+              <>
+                {/* Coupon central : le code invité, façon timbre détachable */}
+                <View style={styles.codeMid}>
+                  <Text style={styles.codeMidLabel}>Code livre d&apos;or</Text>
+                  <View style={styles.codeChip}>
+                    <Text style={styles.codeChipValue}>{billet.code}</Text>
+                  </View>
+                  <Text style={styles.codeMidHelp}>À saisir si le scan ne fonctionne pas</Text>
+                </View>
+
+                <View style={styles.qrBlock}>
+                  <View style={styles.qrGuestbookFrame}>
+                    {/* eslint-disable-next-line jsx-a11y/alt-text -- Image de @react-pdf/renderer */}
+                    <Image src={guestbookQrDataUrl} style={styles.qrGuestbook} />
+                    {/* Fleur séchée posée sur le coin du cadre */}
+                    <View
+                      style={{
+                        position: "absolute",
+                        top: -9,
+                        right: -10,
+                        width: 20,
+                        height: 20,
+                      }}
+                    >
+                      <Svg viewBox="0 0 40 40" style={{ width: 20, height: 20 }}>
+                        <PdfBloom x={20} y={20} r={10} />
+                      </Svg>
+                    </View>
+                  </View>
+                  <Text style={styles.qrHint}>Livre d&apos;or</Text>
+                </View>
+              </>
+            )}
+          </View>
         </View>
       </Page>
     </Document>

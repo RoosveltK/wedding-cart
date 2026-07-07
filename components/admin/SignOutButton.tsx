@@ -14,7 +14,14 @@ export function SignOutButton() {
   }
 
   return (
-    <button onClick={handleSignOut} className="text-neutral-500 transition hover:text-neutral-900">
+    <button
+      onClick={handleSignOut}
+      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-[#8a7f6a] transition hover:bg-[#f0ebdd] hover:text-[#332e25]"
+    >
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
       Déconnexion
     </button>
   );

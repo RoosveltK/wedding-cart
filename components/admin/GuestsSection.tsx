@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { generateGuestToken } from "@/lib/token";
 import { TextField } from "@/components/ui/Field";
@@ -34,10 +34,18 @@ function initials(name: string) {
     .join("");
 }
 
+function normalize(text: string) {
+  return text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+}
+
 export function GuestsSection({ eventId }: { eventId: string }) {
   const supabase = createClient();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [nom, setNom] = useState("");
   const [telephone, setTelephone] = useState("");
   const [table, setTable] = useState("");
@@ -65,6 +73,18 @@ export function GuestsSection({ eventId }: { eventId: string }) {
     loadGuests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
+
+  const filtered = useMemo(() => {
+    const q = normalize(search.trim());
+    if (!q) return guests;
+    return guests.filter(
+      (g) =>
+        normalize(g.nom_complet).includes(q) ||
+        (g.telephone ?? "").includes(search.trim()) ||
+        normalize(g.table_nom ?? "").includes(q) ||
+        g.code.toUpperCase().includes(search.trim().toUpperCase()),
+    );
+  }, [guests, search]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -147,8 +167,14 @@ export function GuestsSection({ eventId }: { eventId: string }) {
     downloadGuestsExport(guests, billetUrl);
   }
 
-  async function handleDelete(id: string) {
-    await supabase.from("guests").delete().eq("id", id);
+  async function handleDelete(guest: Guest) {
+    if (
+      !window.confirm(
+        `Supprimer ${guest.nom_complet} ? Son billet ne fonctionnera plus et ses messages du livre d'or seront effacés.`,
+      )
+    )
+      return;
+    await supabase.from("guests").delete().eq("id", guest.id);
     loadGuests();
   }
 
@@ -162,34 +188,29 @@ export function GuestsSection({ eventId }: { eventId: string }) {
     <Card>
       <CardHeader
         title={`Invités${!loading ? ` (${guests.length})` : ""}`}
-        description="Génère un lien de billet unique et sécurisé pour chaque invité."
+        description="Chaque invité reçoit un lien de billet unique et un code livre d'or."
+        actions={
+          <>
+            <Button type="button" variant="ghost" onClick={downloadGuestTemplate} className="text-xs">
+              Modèle .xlsx
+            </Button>
+            <label className="cursor-pointer rounded-lg border border-[#e3dccb] bg-white px-3.5 py-2 text-sm font-medium text-[#4a4234] transition hover:border-[#c8a862] hover:bg-[#faf7f0]">
+              {importing ? "Import..." : "Importer"}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleImportFile}
+                disabled={importing}
+                className="hidden"
+              />
+            </label>
+            <Button type="button" variant="secondary" onClick={handleExport} disabled={guests.length === 0}>
+              Exporter
+            </Button>
+          </>
+        }
       />
-
-      <div className="flex flex-wrap items-center gap-2 border-b border-neutral-100 px-6 py-4">
-        <Button type="button" variant="secondary" onClick={downloadGuestTemplate}>
-          Télécharger le modèle
-        </Button>
-        <label className="cursor-pointer rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50">
-          {importing ? "Import en cours..." : "Importer un fichier Excel"}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx,.xls,.csv"
-            onChange={handleImportFile}
-            disabled={importing}
-            className="hidden"
-          />
-        </label>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={handleExport}
-          disabled={guests.length === 0}
-          className="ml-auto"
-        >
-          Exporter la liste (.xlsx)
-        </Button>
-      </div>
 
       {importMessage && (
         <div className="px-6 pt-4">
@@ -197,91 +218,141 @@ export function GuestsSection({ eventId }: { eventId: string }) {
         </div>
       )}
 
-      <form
-        onSubmit={handleAdd}
-        className="flex flex-wrap items-end gap-3 border-b border-neutral-100 px-6 py-5"
-      >
-        <div className="min-w-[200px] flex-1">
-          <TextField label="Nom complet" value={nom} onChange={(e) => setNom(e.target.value)} />
+      {/* Ajout rapide d'un invité */}
+      <form onSubmit={handleAdd} className="border-b border-[#f0ebdd] bg-[#faf7f0]/60 px-6 py-5">
+        <p className="mb-3 text-[11px] font-semibold tracking-[0.18em] text-[#24439c] uppercase">
+          Ajouter un invité
+        </p>
+        {/* Pas de description sous les champs : toutes les colonnes gardent la même
+            hauteur (label + input) et restent alignées avec le bouton. */}
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-[200px] flex-1">
+            <TextField
+              label="Nom complet"
+              placeholder="ex. Jean Kamga"
+              value={nom}
+              onChange={(e) => setNom(e.target.value)}
+            />
+          </div>
+          <div className="min-w-[180px] flex-1">
+            <TextField
+              label="Téléphone (optionnel, pour WhatsApp)"
+              value={telephone}
+              onChange={(e) => setTelephone(e.target.value)}
+              placeholder="+237 6XX XXX XXX"
+            />
+          </div>
+          <div className="min-w-[140px] flex-1">
+            <TextField
+              label="Table (optionnel)"
+              value={table}
+              onChange={(e) => setTable(e.target.value)}
+              placeholder="ex. Amitié"
+            />
+          </div>
+          <Button type="submit" disabled={saving}>
+            {saving ? "Ajout..." : "Ajouter"}
+          </Button>
         </div>
-        <div className="min-w-[180px] flex-1">
-          <TextField
-            label="Téléphone"
-            description="Optionnel, pour WhatsApp"
-            value={telephone}
-            onChange={(e) => setTelephone(e.target.value)}
-            placeholder="+237 6XX XXX XXX"
-          />
-        </div>
-        <div className="min-w-[140px] flex-1">
-          <TextField
-            label="Table"
-            description="Optionnel"
-            value={table}
-            onChange={(e) => setTable(e.target.value)}
-            placeholder="ex. Amitié"
-          />
-        </div>
-        <Button type="submit" disabled={saving}>
-          {saving ? "Ajout..." : "Ajouter"}
-        </Button>
+        {error && (
+          <div className="mt-3">
+            <Banner variant="error">{error}</Banner>
+          </div>
+        )}
       </form>
 
-      {error && (
-        <div className="px-6 pt-4">
-          <Banner variant="error">{error}</Banner>
+      {/* Recherche */}
+      {!loading && guests.length > 0 && (
+        <div className="border-b border-[#f0ebdd] px-6 py-3">
+          <div className="relative">
+            <svg
+              viewBox="0 0 24 24"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#b3a98f]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m21 21-4.3-4.3" strokeLinecap="round" />
+            </svg>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher par nom, téléphone, table ou code..."
+              aria-label="Rechercher un invité"
+              className="w-full rounded-lg border border-transparent bg-[#faf7f0] py-2 pl-9 pr-3 text-sm text-[#332e25] outline-none transition placeholder:text-[#b3a98f] focus:border-[#24439c] focus:bg-white"
+            />
+          </div>
         </div>
       )}
 
-      <div className="divide-y divide-neutral-100">
-        {loading && <p className="px-6 py-6 text-sm text-neutral-500">Chargement...</p>}
+      <div className="divide-y divide-[#f0ebdd]">
+        {loading && <p className="px-6 py-6 text-sm text-[#8a7f6a]">Chargement...</p>}
 
         {!loading && guests.length === 0 && (
-          <p className="px-6 py-6 text-sm text-neutral-500">
-            Aucun invité pour le moment — ajoute le premier ci-dessus.
+          <div className="px-6 py-10 text-center">
+            <p className="font-script text-3xl text-[#b3a98f]">La liste est vide</p>
+            <p className="mt-2 text-sm text-[#8a7f6a]">
+              Ajoute ton premier invité ci-dessus, ou importe la liste complète depuis Excel.
+            </p>
+          </div>
+        )}
+
+        {!loading && guests.length > 0 && filtered.length === 0 && (
+          <p className="px-6 py-6 text-sm text-[#8a7f6a]">
+            Aucun invité ne correspond à « {search} ».
           </p>
         )}
 
-        {guests.map((guest) => (
+        {filtered.map((guest) => (
           <div
             key={guest.id}
-            className="flex flex-wrap items-center justify-between gap-3 px-6 py-3.5 transition hover:bg-neutral-50"
+            className="flex flex-wrap items-center justify-between gap-3 px-6 py-3.5 transition hover:bg-[#faf7f0]/70"
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-xs font-medium text-white">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#24439c] to-[#1a3277] text-xs font-semibold text-[#f6efe2] shadow-sm">
                 {initials(guest.nom_complet)}
               </div>
-              <div>
-                <p className="text-sm font-medium text-neutral-900">{guest.nom_complet}</p>
-                <p className="text-xs text-neutral-500">{guest.telephone ?? "Pas de téléphone"}</p>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-[#332e25]">{guest.nom_complet}</p>
+                <p className="flex flex-wrap items-center gap-x-2 text-xs text-[#8a7f6a]">
+                  <span>{guest.telephone ?? "Pas de téléphone"}</span>
+                  <span aria-hidden className="text-[#e3dccb]">•</span>
+                  <span title="Code livre d'or" className="font-semibold tracking-[0.15em] text-[#24439c]">
+                    {guest.code}
+                  </span>
+                  {guest.table_nom && (
+                    <>
+                      <span aria-hidden className="text-[#e3dccb]">•</span>
+                      <span className="text-[#a8862f]">Table {guest.table_nom}</span>
+                    </>
+                  )}
+                </p>
               </div>
-              {guest.table_nom && (
-                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
-                  Table {guest.table_nom}
-                </span>
-              )}
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleCopy(guest.token, guest.id)}
-                className="rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs font-medium text-neutral-600 transition hover:bg-neutral-100"
+                className="rounded-lg border border-[#e3dccb] bg-white px-2.5 py-1.5 text-xs font-medium text-[#4a4234] transition hover:border-[#c8a862] hover:bg-[#faf7f0]"
               >
-                {copiedId === guest.id ? "Copié !" : "Copier le lien"}
+                {copiedId === guest.id ? "✓ Copié !" : "Copier le lien"}
               </button>
               {guest.telephone && (
                 <a
                   href={whatsappUrl(guest.telephone, billetUrl(guest.token))}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-md bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-green-700"
+                  className="rounded-lg bg-green-600 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-green-700"
                 >
                   WhatsApp
                 </a>
               )}
               <button
-                onClick={() => handleDelete(guest.id)}
-                className="rounded-md px-2.5 py-1.5 text-xs font-medium text-neutral-400 transition hover:bg-red-50 hover:text-red-600"
+                onClick={() => handleDelete(guest)}
+                aria-label={`Supprimer ${guest.nom_complet}`}
+                className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#b3a98f] transition hover:bg-red-50 hover:text-red-600"
               >
                 Supprimer
               </button>
