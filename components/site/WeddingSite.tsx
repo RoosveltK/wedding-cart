@@ -2,8 +2,8 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import { PosterHero } from "./PosterHero";
 import { ScrollConfetti } from "./ScrollConfetti";
@@ -23,39 +23,6 @@ const DownloadPdfButton = dynamic(
     ),
   },
 );
-
-const FloatingDownloadButton = dynamic(
-  () => import("@/components/ticket/DownloadPdfButton").then((m) => m.FloatingDownloadButton),
-  { ssr: false },
-);
-
-/** Bouton flottant visible dès qu'on quitte le haut du hero. */
-function FloatingTicket({ billet, billetUrl }: { billet: Billet; billetUrl: string }) {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 260);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          className="pointer-events-none fixed bottom-5 right-5 z-50"
-          initial={{ opacity: 0, y: 24, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 24, scale: 0.9 }}
-          transition={{ duration: 0.35, ease: "easeOut" }}
-        >
-          <FloatingDownloadButton billet={billet} billetUrl={billetUrl} />
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
 
 type Billet = Database["public"]["Functions"]["get_billet"]["Returns"][number];
 
@@ -119,11 +86,15 @@ function Section({
   title,
   children,
   tinted = false,
+  nextId,
+  nextLabel,
 }: {
   id: string;
   title: string;
   children: React.ReactNode;
   tinted?: boolean;
+  nextId?: string;
+  nextLabel?: string;
 }) {
   return (
     <section id={id} className={`relative px-6 py-20 ${tinted ? "bg-[#e7dcc6]/45" : ""}`}>
@@ -139,6 +110,27 @@ function Section({
         </h2>
         <SprigDivider className="mx-auto mt-4 h-8 w-52" />
         <div className="mt-10">{children}</div>
+
+        {/* Guide de navigation : un bouton clair vers la section suivante */}
+        {nextId && nextLabel && (
+          <div className="mt-12 flex justify-center px-2 sm:mt-14">
+            <a
+              href={`#${nextId}`}
+              className="flex w-full max-w-xs items-center justify-center gap-3 rounded-full border-2 border-[#24439c] bg-[#fbf6ea] px-5 py-3.5 text-center text-xs font-semibold tracking-[0.12em] text-[#24439c] uppercase shadow-sm transition hover:bg-[#24439c] hover:text-[#fdf8ec] sm:w-auto sm:px-6"
+            >
+              {nextLabel}
+              <motion.svg
+                viewBox="0 0 24 12"
+                className="h-3 w-5"
+                animate={{ y: [0, 4, 0] }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                aria-hidden
+              >
+                <path d="M2 2 L12 10 L22 2" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </motion.svg>
+            </a>
+          </div>
+        )}
       </motion.div>
     </section>
   );
@@ -214,7 +206,12 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
       <PosterHero billet={billet} />
 
       {/* ——— Les mariés ——— */}
-      <Section id="maries" title="Les mariés">
+      <Section
+        id="maries"
+        title="Les mariés"
+        nextId={billet.video_url ? "message" : "programme"}
+        nextLabel={billet.video_url ? "Voir le message des mariés" : "Voir le programme"}
+      >
         <div className="relative mx-auto max-w-md rotate-[-1.5deg] bg-[#fbf6ea] p-3 pb-6 shadow-[0_14px_30px_rgba(51,46,37,0.18)]">
           <WashiTape className="absolute -top-4 left-6 h-8 w-24 -rotate-6" />
           <WashiTape className="absolute -top-3 right-8 h-7 w-20" rotate={5} />
@@ -260,13 +257,24 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
 
       {/* ——— Message vidéo des mariés ——— */}
       {billet.video_url && (
-        <Section id="message" title="Les mariés vous disent quelque chose">
+        <Section
+          id="message"
+          title="Les mariés vous disent quelque chose"
+          nextId="programme"
+          nextLabel="Voir le programme"
+        >
           <VideoMessage videoUrl={billet.video_url} />
         </Section>
       )}
 
       {/* ——— Programme ——— */}
-      <Section id="programme" title="La célébration" tinted>
+      <Section
+        id="programme"
+        title="La célébration"
+        tinted
+        nextId="lieu"
+        nextLabel="Voir le lieu"
+      >
         <TornEdge className="pointer-events-none absolute left-0 top-0 h-8 w-full" fill="#efe7d7" flip />
         <ol className="relative mx-auto max-w-lg space-y-10 border-l border-[#c8a862]/70 pl-8">
           {programme.map((etape, i) => (
@@ -300,7 +308,7 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
       </Section>
 
       {/* ——— Le lieu ——— */}
-      <Section id="lieu" title="Le lieu">
+      <Section id="lieu" title="Le lieu" nextId="billet" nextLabel="Voir votre billet">
         <div className="relative mx-auto max-w-md bg-[#fbf6ea] px-8 py-10 text-center shadow-[0_14px_30px_rgba(51,46,37,0.14)]">
           <DriedFlowers className="pointer-events-none absolute -right-8 -top-10 w-24 rotate-[140deg] opacity-80" />
           {date && (
@@ -369,7 +377,6 @@ export function WeddingSite({ billet, billetUrl }: { billet: Billet; billetUrl: 
       </footer>
 
       <ScrollConfetti />
-      <FloatingTicket billet={billet} billetUrl={billetUrl} />
       <PaperGrain className="pointer-events-none fixed inset-0 z-40" />
     </motion.main>
   );

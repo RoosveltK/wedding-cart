@@ -64,29 +64,3 @@ export function DownloadPdfButton({ billet, billetUrl }: { billet: Billet; bille
     </button>
   );
 }
-
-/** Bouton flottant : le billet se télécharge sans devoir dérouler toute la page. */
-export function FloatingDownloadButton({
-  billet,
-  billetUrl,
-}: {
-  billet: Billet;
-  billetUrl: string;
-}) {
-  const { ready, generating, download } = useBilletPdf(billet, billetUrl);
-
-  return (
-    <button
-      onClick={download}
-      disabled={!ready || generating}
-      aria-label="Télécharger mon billet en PDF"
-      className="pointer-events-auto flex items-center gap-2 rounded-full border border-[#e0af2e] bg-[#24439c] py-3 pl-4 pr-5 text-[10px] tracking-[0.2em] text-[#f6efe2] uppercase shadow-[0_10px_24px_rgba(26,50,119,0.45)] transition hover:bg-[#1a3277] disabled:opacity-60"
-    >
-      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d="M12 3v12m0 0 4-4m-4 4-4-4" />
-        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
-      </svg>
-      {generating ? "Génération..." : "Mon billet"}
-    </button>
-  );
-}

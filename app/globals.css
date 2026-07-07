@@ -30,6 +30,17 @@ body {
   overflow-x: clip;
 }
 
+/* Défilement fluide pour les ancres de navigation du billet */
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 /* Confetti festif déclenché au scroll (voir ScrollConfetti.tsx) */
 @keyframes confetti-fall {
   0% {

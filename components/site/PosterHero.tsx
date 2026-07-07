@@ -56,8 +56,10 @@ export function PosterHero({ billet }: { billet: Billet }) {
 
   return (
     <header className="relative flex min-h-svh flex-col overflow-hidden bg-[#efe7d7]">
-      {/* ——— Photo voilée, comme en haut de l'affiche ——— */}
-      <div className="relative h-[52svh] min-h-[320px] w-full">
+      {/* ——— Photo voilée, comme en haut de l'affiche ———
+          Hauteur réduite sur mobile pour que le bouton « Découvrir la suite »
+          reste visible sans avoir à défiler. */}
+      <div className="relative h-[40svh] min-h-[270px] w-full sm:h-[52svh] sm:min-h-[320px]">
         <Image
           src="/images/maries.jpg"
           alt={`${billet.nom_mariee} et ${billet.nom_marie}`}
@@ -103,13 +105,13 @@ export function PosterHero({ billet }: { billet: Billet }) {
       </div>
 
       {/* ——— Partie papier de l'affiche ——— */}
-      <div className="relative flex flex-1 flex-col items-center px-6 pb-16 pt-6 text-center">
+      <div className="relative flex flex-1 flex-col items-center px-6 pb-8 pt-5 text-center sm:pb-16 sm:pt-6">
         {/* branche de fleurs séchées sur le bord gauche */}
         <DriedFlowers className="pointer-events-none absolute -left-10 -top-40 z-10 w-44 opacity-95 sm:-left-4 sm:w-56" />
         <WashiTape className="pointer-events-none absolute -left-14 bottom-16 z-10 h-10 w-32 sm:-left-6" rotate={-14} />
 
         <motion.h1
-          className="font-script text-[clamp(3.2rem,12vw,5.5rem)] leading-[1.05] text-[#332e25]"
+          className="font-script text-[clamp(2.7rem,10.5vw,5.5rem)] leading-[1.05] text-[#332e25]"
           variants={rise}
           initial="hidden"
           animate="show"
@@ -122,7 +124,7 @@ export function PosterHero({ billet }: { billet: Billet }) {
 
         {date && (
           <motion.div
-            className="mt-8 space-y-4"
+            className="mt-5 space-y-3 sm:mt-8 sm:space-y-4"
             variants={rise}
             initial="hidden"
             animate="show"
@@ -144,7 +146,7 @@ export function PosterHero({ billet }: { billet: Billet }) {
 
         {billet.lieu && (
           <motion.p
-            className="mt-6 max-w-xs font-serif text-[11px] leading-relaxed tracking-[0.3em] text-[#5c5343] uppercase"
+            className="mt-4 max-w-xs font-serif text-[11px] leading-relaxed tracking-[0.3em] text-[#5c5343] uppercase sm:mt-6"
             variants={rise}
             initial="hidden"
             animate="show"
@@ -156,7 +158,7 @@ export function PosterHero({ billet }: { billet: Billet }) {
 
         <motion.a
           href="#maries"
-          className="group mt-auto flex flex-col items-center gap-2 pt-10"
+          className="group mt-auto flex flex-col items-center gap-1 pt-5 sm:gap-2 sm:pt-10"
           variants={rise}
           initial="hidden"
           animate="show"
@@ -164,7 +166,7 @@ export function PosterHero({ billet }: { billet: Billet }) {
         >
           {/* Gros bouton bien lisible, aux couleurs du mariage, qui invite à descendre */}
           <motion.span
-            className="flex items-center gap-3 rounded-full border-2 border-[#e0af2e] bg-[#24439c] px-7 py-4 text-sm font-semibold tracking-[0.12em] text-[#fdf8ec] uppercase shadow-[0_12px_28px_rgba(26,50,119,0.4)] transition group-hover:bg-[#1a3277]"
+            className="flex max-w-full items-center justify-center gap-2 rounded-full border-2 border-[#e0af2e] bg-[#24439c] px-5 py-3.5 text-[13px] font-semibold tracking-[0.1em] text-[#fdf8ec] uppercase shadow-[0_12px_28px_rgba(26,50,119,0.4)] transition group-hover:bg-[#1a3277] sm:gap-3 sm:px-7 sm:py-4 sm:text-sm sm:tracking-[0.12em]"
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
@@ -190,7 +192,7 @@ export function PosterHero({ billet }: { billet: Billet }) {
           </motion.span>
 
           {/* grande flèche dorée qui descend, impossible à manquer */}
-          <span className="relative flex h-12 flex-col items-center pt-1" aria-hidden>
+          <span className="relative flex h-10 flex-col items-center pt-1 sm:h-12" aria-hidden>
             {[0, 1].map((i) => (
               <motion.svg
                 key={i}
