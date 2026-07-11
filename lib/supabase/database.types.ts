@@ -193,11 +193,11 @@ export type Database = {
       get_guestbook: {
         Args: Record<PropertyKey, never>
         Returns: {
-          created_at: string
-          id: string
-          message: string | null
+          entries: Json
+          guest_id: string
+          last_activity: string
           nom_complet: string
-          photos: string[]
+          photos: Json
         }[]
       }
     }

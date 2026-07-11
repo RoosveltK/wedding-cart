@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { findGuest, photosRestantes, storagePlein } from "@/lib/guestbookServer";
+import { findGuest, guestHasMessage, photosRestantes, storagePlein } from "@/lib/guestbookServer";
 import type { GuestbookVerifyResponse } from "@/lib/guestbook";
 
 /** Vérifie qu'un visiteur est bien un invité (nom du billet ou code à 5 chiffres). */
@@ -29,16 +29,19 @@ export async function POST(request: Request) {
     );
   }
 
-  const [restantes, plein] = await Promise.all([
+  const [restantes, plein, hasMessage] = await Promise.all([
     photosRestantes(supabase, guest.id),
     storagePlein(supabase),
+    guestHasMessage(supabase, guest.id),
   ]);
 
   const payload: GuestbookVerifyResponse = {
+    id: guest.id,
     nom: guest.nom_complet,
     code: guest.code,
     photosRestantes: restantes,
     storagePlein: plein,
+    hasMessage,
   };
   return NextResponse.json(payload);
 }

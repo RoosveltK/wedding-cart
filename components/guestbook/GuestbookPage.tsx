@@ -18,11 +18,11 @@ import {
   MAX_MESSAGE_LONGUEUR,
   MAX_PHOTOS_PAR_INVITE,
   MAX_TAILLE_PHOTO,
+  type GuestbookGroup,
   type GuestbookVerifyResponse,
 } from "@/lib/guestbook";
-import type { Database } from "@/lib/supabase/database.types";
-
-type Entry = Database["public"]["Functions"]["get_guestbook"]["Returns"][number];
+import { PhotoLightbox } from "@/components/guestbook/PhotoLightbox";
+import { ThankYouOverlay } from "@/components/guestbook/ThankYouOverlay";
 
 const reveal = {
   hidden: { opacity: 0, y: 28 },
@@ -143,7 +143,7 @@ function ComposerCard({
   onPosted,
 }: {
   guest: GuestbookVerifyResponse;
-  onPosted: (photosRestantes: number) => void;
+  onPosted: (payload: { photosRestantes: number; hasMessage: boolean }) => void;
 }) {
   const [message, setMessage] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
@@ -184,8 +184,13 @@ function ComposerCard({
     e.preventDefault();
     setError(null);
 
-    if (!message.trim() && photos.length === 0) {
-      setError("Écrivez un message ou ajoutez au moins une photo.");
+    const withMessage = !guest.hasMessage && message.trim().length > 0;
+    if (!withMessage && photos.length === 0) {
+      setError(
+        guest.hasMessage
+          ? "Ajoutez au moins une photo (vous avez déjà laissé votre message)."
+          : "Écrivez un message ou ajoutez au moins une photo.",
+      );
       return;
     }
 
@@ -193,7 +198,7 @@ function ComposerCard({
     try {
       const form = new FormData();
       form.set("identifier", guest.code);
-      if (message.trim()) form.set("message", message.trim());
+      if (withMessage) form.set("message", message.trim());
       photos.forEach((p) => form.append("photos", p));
 
       const res = await fetch("/api/guestbook/entries", { method: "POST", body: form });
@@ -207,7 +212,10 @@ function ComposerCard({
       setPhotos([]);
       setPosted(true);
       setTimeout(() => setPosted(false), 4000);
-      onPosted(data.photosRestantes ?? guest.photosRestantes);
+      onPosted({
+        photosRestantes: data.photosRestantes ?? guest.photosRestantes,
+        hasMessage: data.hasMessage ?? guest.hasMessage,
+      });
     } catch {
       setError("Échec de l'envoi. Vérifiez votre connexion et réessayez.");
     } finally {
@@ -223,7 +231,7 @@ function ComposerCard({
       <div className="relative rotate-[0.7deg] bg-[#fbf6ea] px-6 py-8 shadow-[0_16px_34px_rgba(51,46,37,0.2)] sm:px-9">
         <p className="text-center font-script text-3xl text-[#332e25]">Bienvenue, {guest.nom}</p>
         <p className="mt-2 text-center font-serif text-sm text-[#5c5343]">
-          Laissez un souvenir aux mariés — il rejoindra le mur ci-dessous.
+          Un mot doux et/ou des photos (juste en dessous ↓) — tout rejoindra le mur des mariés.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-5">
@@ -234,17 +242,26 @@ function ComposerCard({
             >
               Votre message
             </label>
-            <textarea
-              id="guestbook-message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE_LONGUEUR))}
-              rows={4}
-              placeholder="Quelques mots pour Diane & Martial..."
-              className="mt-2 w-full resize-none border border-[#8a7360]/40 bg-white/70 px-4 py-3 font-serif text-base leading-relaxed text-[#332e25] outline-none transition placeholder:text-[#8a7360]/60 focus:border-[#24439c]"
-            />
-            <p className="mt-1 text-right text-[10px] tracking-[0.2em] text-[#8a7360]">
-              {message.length}/{MAX_MESSAGE_LONGUEUR}
-            </p>
+            {guest.hasMessage ? (
+              <p className="mt-2 border-l-2 border-[#e0af2e] bg-[#e0af2e]/10 px-3 py-2 font-serif text-sm text-[#5c5343]">
+                Vous avez déjà laissé un message — retrouvez-le (et supprimez-le si besoin) dans le mur des
+                souvenirs ci-dessous pour en écrire un nouveau.
+              </p>
+            ) : (
+              <>
+                <textarea
+                  id="guestbook-message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value.slice(0, MAX_MESSAGE_LONGUEUR))}
+                  rows={3}
+                  placeholder="Quelques mots pour Diane & Martial..."
+                  className="mt-2 w-full resize-none border border-[#8a7360]/40 bg-white/70 px-4 py-3 font-serif text-base leading-relaxed text-[#332e25] outline-none transition placeholder:text-[#8a7360]/60 focus:border-[#24439c]"
+                />
+                <p className="mt-1 text-right text-[10px] tracking-[0.2em] text-[#8a7360]">
+                  {message.length}/{MAX_MESSAGE_LONGUEUR}
+                </p>
+              </>
+            )}
           </div>
 
           <div>
@@ -318,30 +335,37 @@ function ComposerCard({
             {sending ? "Envoi..." : "Déposer dans le livre d'or"}
           </button>
         </form>
-
-        <AnimatePresence>
-          {posted && (
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mt-4 text-center font-script text-2xl text-[#24439c]"
-            >
-              Merci, votre souvenir est déposé !
-            </motion.p>
-          )}
-        </AnimatePresence>
       </div>
+
+      {posted && <ThankYouOverlay nom={guest.nom} onClose={() => setPosted(false)} />}
     </div>
   );
 }
 
 /* ————————————————— Mur des souvenirs ————————————————— */
 
-function WallCard({ entry, index }: { entry: Entry; index: number }) {
+function WallCard({
+  group,
+  index,
+  isOwner,
+  deletingPhotoId,
+  deletingEntryId,
+  onOpenPhoto,
+  onDeletePhoto,
+  onDeleteMessage,
+}: {
+  group: GuestbookGroup;
+  index: number;
+  isOwner: boolean;
+  deletingPhotoId: string | null;
+  deletingEntryId: string | null;
+  onOpenPhoto: (photoIndex: number) => void;
+  onDeletePhoto: (photoId: string) => void;
+  onDeleteMessage: (entryId: string) => void;
+}) {
   return (
     <motion.div
-      className={`relative mb-8 break-inside-avoid bg-[#fbf6ea] p-4 pb-5 shadow-[0_12px_26px_rgba(51,46,37,0.16)] ${TILTS[index % TILTS.length]}`}
+      className={`relative bg-[#fbf6ea] p-4 pb-5 shadow-[0_12px_26px_rgba(51,46,37,0.16)] ${TILTS[index % TILTS.length]}`}
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
@@ -352,31 +376,73 @@ function WallCard({ entry, index }: { entry: Entry; index: number }) {
         rotate={index % 2 === 0 ? -5 : 6}
       />
 
-      {entry.photos.length > 0 && (
-        <div className={`grid gap-2 ${entry.photos.length > 1 ? "grid-cols-2" : ""}`}>
-          {entry.photos.map((path) => (
-            <div key={path} className="relative aspect-square overflow-hidden bg-[#e7dcc6]">
-              <Image
-                src={guestbookPhotoUrl(path)}
-                alt={`Photo laissée par ${entry.nom_complet}`}
-                fill
-                sizes="(max-width: 640px) 50vw, 220px"
-                className="object-cover"
-              />
+      {group.photos.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-3">
+          {group.photos.map((photo, i) => (
+            <div
+              key={photo.id}
+              className={`group/photo relative bg-white p-1.5 pb-4 shadow-[0_6px_16px_rgba(51,46,37,0.22)] ${TILTS[i % TILTS.length]}`}
+            >
+              <button
+                type="button"
+                onClick={() => onOpenPhoto(i)}
+                aria-label={`Agrandir la photo ${i + 1} de ${group.nom_complet}`}
+                className="relative block h-24 w-24 overflow-hidden bg-[#e7dcc6] sm:h-28 sm:w-28"
+              >
+                <Image
+                  src={guestbookPhotoUrl(photo.path)}
+                  alt={`Photo laissée par ${group.nom_complet}`}
+                  fill
+                  sizes="112px"
+                  className="object-cover transition group-hover/photo:scale-105"
+                />
+              </button>
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeletePhoto(photo.id);
+                  }}
+                  disabled={deletingPhotoId === photo.id}
+                  aria-label="Supprimer cette photo"
+                  title="Supprimer cette photo"
+                  className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-[#332e25]/90 text-xs leading-none text-[#f6efe2] shadow transition hover:bg-red-600 disabled:opacity-60"
+                >
+                  {deletingPhotoId === photo.id ? "…" : "×"}
+                </button>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {entry.message && (
-        <p className={`font-serif text-[15px] italic leading-relaxed text-[#5c5343] ${entry.photos.length > 0 ? "mt-3" : ""}`}>
-          « {entry.message} »
-        </p>
-      )}
+      {group.entries.map((entry, i) => (
+        <div
+          key={entry.id}
+          className={`flex items-start justify-between gap-2 ${
+            i > 0 ? "mt-2" : group.photos.length > 0 ? "mt-3" : ""
+          }`}
+        >
+          <p className="font-serif text-[15px] italic leading-relaxed text-[#5c5343]">« {entry.message} »</p>
+          {isOwner && (
+            <button
+              type="button"
+              onClick={() => onDeleteMessage(entry.id)}
+              disabled={deletingEntryId === entry.id}
+              aria-label="Supprimer ce message"
+              title="Supprimer ce message"
+              className="shrink-0 rounded-full px-1.5 py-0.5 text-xs leading-none text-[#8a7360] transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+            >
+              {deletingEntryId === entry.id ? "…" : "×"}
+            </button>
+          )}
+        </div>
+      ))}
 
       <div className="mt-4 flex items-end justify-between gap-2">
-        <p className="font-script text-2xl leading-none text-[#24439c]">{entry.nom_complet}</p>
-        <p className="text-[9px] tracking-[0.25em] text-[#8a7360] uppercase">{formatEntryDate(entry.created_at)}</p>
+        <p className="font-script text-2xl leading-none text-[#24439c]">{group.nom_complet}</p>
+        <p className="text-[9px] tracking-[0.25em] text-[#8a7360] uppercase">{formatEntryDate(group.last_activity)}</p>
       </div>
     </motion.div>
   );
@@ -389,17 +455,80 @@ export function GuestbookPage() {
   const initialCode = searchParams.get("code");
 
   const [guest, setGuest] = useState<GuestbookVerifyResponse | null>(null);
-  const [entries, setEntries] = useState<Entry[] | null>(null);
+  const [groups, setGroups] = useState<GuestbookGroup[] | null>(null);
+  const [lightbox, setLightbox] = useState<{ groupIndex: number; photoIndex: number } | null>(null);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<string | null>(null);
+  const [deletingEntryId, setDeletingEntryId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const loadWall = useCallback(async () => {
     const supabase = createClient();
     const { data } = await supabase.rpc("get_guestbook");
-    setEntries(data ?? []);
+    setGroups((data as unknown as GuestbookGroup[] | null) ?? []);
   }, []);
 
   useEffect(() => {
     loadWall();
   }, [loadWall]);
+
+  const handleDeletePhoto = useCallback(
+    async (photoId: string) => {
+      if (!guest) return;
+      if (!window.confirm("Supprimer cette photo ?")) return;
+
+      setDeletingPhotoId(photoId);
+      setDeleteError(null);
+      try {
+        const res = await fetch("/api/guestbook/photos", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: guest.code, photoId }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setDeleteError(data.error ?? "Échec de la suppression. Réessayez.");
+          return;
+        }
+        setGuest((g) => (g ? { ...g, photosRestantes: data.photosRestantes ?? g.photosRestantes } : g));
+        setLightbox(null);
+        await loadWall();
+      } catch {
+        setDeleteError("Échec de la suppression. Vérifiez votre connexion et réessayez.");
+      } finally {
+        setDeletingPhotoId(null);
+      }
+    },
+    [guest, loadWall],
+  );
+
+  const handleDeleteMessage = useCallback(
+    async (entryId: string) => {
+      if (!guest) return;
+      if (!window.confirm("Supprimer ce message ?")) return;
+
+      setDeletingEntryId(entryId);
+      setDeleteError(null);
+      try {
+        const res = await fetch("/api/guestbook/messages", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier: guest.code, entryId }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setDeleteError(data.error ?? "Échec de la suppression. Réessayez.");
+          return;
+        }
+        setGuest((g) => (g ? { ...g, hasMessage: false } : g));
+        await loadWall();
+      } catch {
+        setDeleteError("Échec de la suppression. Vérifiez votre connexion et réessayez.");
+      } finally {
+        setDeletingEntryId(null);
+      }
+    },
+    [guest, loadWall],
+  );
 
   return (
     <main className="relative min-h-screen bg-[#efe7d7] text-[#332e25]">
@@ -433,8 +562,8 @@ export function GuestbookPage() {
             <motion.div key="composer" variants={reveal} initial="hidden" animate="show" exit={{ opacity: 0 }}>
               <ComposerCard
                 guest={guest}
-                onPosted={(photosRestantes) => {
-                  setGuest((g) => (g ? { ...g, photosRestantes } : g));
+                onPosted={({ photosRestantes, hasMessage }) => {
+                  setGuest((g) => (g ? { ...g, photosRestantes, hasMessage } : g));
                   loadWall();
                 }}
               />
@@ -457,19 +586,35 @@ export function GuestbookPage() {
           </h2>
           <SprigDivider className="mx-auto mt-4 h-8 w-52" />
 
+          {deleteError && (
+            <p role="alert" className="mx-auto mt-6 max-w-sm border-l-2 border-[#a33] bg-[#a33]/5 px-3 py-2 text-center font-serif text-sm text-[#7a2d2d]">
+              {deleteError}
+            </p>
+          )}
+
           <div className="mt-12">
-            {entries === null && (
+            {groups === null && (
               <p className="text-center font-serif text-sm text-[#8a7360]">Ouverture du livre...</p>
             )}
-            {entries !== null && entries.length === 0 && (
+            {groups !== null && groups.length === 0 && (
               <p className="mx-auto max-w-sm text-center font-serif text-base italic text-[#5c5343]">
                 Les pages sont encore blanches — soyez les premiers à écrire un mot aux mariés.
               </p>
             )}
-            {entries !== null && entries.length > 0 && (
-              <div className="columns-1 gap-8 sm:columns-2 lg:columns-3">
-                {entries.map((entry, i) => (
-                  <WallCard key={entry.id} entry={entry} index={i} />
+            {groups !== null && groups.length > 0 && (
+              <div className="grid grid-cols-1 items-start gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {groups.map((group, i) => (
+                  <WallCard
+                    key={group.guest_id}
+                    group={group}
+                    index={i}
+                    isOwner={guest?.id === group.guest_id}
+                    deletingPhotoId={deletingPhotoId}
+                    deletingEntryId={deletingEntryId}
+                    onOpenPhoto={(photoIndex) => setLightbox({ groupIndex: i, photoIndex })}
+                    onDeletePhoto={handleDeletePhoto}
+                    onDeleteMessage={handleDeleteMessage}
+                  />
                 ))}
               </div>
             )}
@@ -486,6 +631,19 @@ export function GuestbookPage() {
           Merci de faire partie de leur histoire.
         </p>
       </footer>
+
+      {lightbox && groups?.[lightbox.groupIndex] && (
+        <PhotoLightbox
+          photos={groups[lightbox.groupIndex].photos}
+          index={lightbox.photoIndex}
+          nom={groups[lightbox.groupIndex].nom_complet}
+          isOwner={guest?.id === groups[lightbox.groupIndex].guest_id}
+          deleting={deletingPhotoId !== null}
+          onClose={() => setLightbox(null)}
+          onNavigate={(photoIndex) => setLightbox((l) => (l ? { ...l, photoIndex } : l))}
+          onDelete={handleDeletePhoto}
+        />
+      )}
 
       <PaperGrain className="pointer-events-none fixed inset-0 z-40" />
     </main>

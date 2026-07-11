@@ -54,3 +54,13 @@ export async function storagePlein(supabase: AdminClient) {
   if (error || data === null) return true;
   return data >= storageLimitBytes();
 }
+
+/** Vrai si l'invité a déjà laissé un message texte (un seul autorisé, tant qu'il n'est pas supprimé). */
+export async function guestHasMessage(supabase: AdminClient, guestId: string) {
+  const { count } = await supabase
+    .from("guestbook_entries")
+    .select("id", { count: "exact", head: true })
+    .eq("guest_id", guestId)
+    .not("message", "is", null);
+  return (count ?? 0) > 0;
+}

@@ -37,8 +37,25 @@ export function guestbookUrl(origin: string, code?: string) {
 }
 
 export type GuestbookVerifyResponse = {
+  id: string;
   nom: string;
   code: string;
   photosRestantes: number;
   storagePlein: boolean;
+  hasMessage: boolean;
+};
+
+/** Une photo du mur, regroupée par invité. */
+export type GuestbookPhotoItem = { id: string; path: string };
+
+/** Un message du mur (un invité peut en avoir déposé plusieurs). */
+export type GuestbookMessageItem = { id: string; message: string; created_at: string };
+
+/** Tous les souvenirs (messages + photos) d'un même invité, tels que renvoyés par `get_guestbook`. */
+export type GuestbookGroup = {
+  guest_id: string;
+  nom_complet: string;
+  entries: GuestbookMessageItem[];
+  photos: GuestbookPhotoItem[];
+  last_activity: string;
 };

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { findGuest, photosRestantes, storagePlein } from "@/lib/guestbookServer";
+import { findGuest, guestHasMessage, photosRestantes, storagePlein } from "@/lib/guestbookServer";
 import {
   GUESTBOOK_BUCKET,
   MAX_MESSAGE_LONGUEUR,
@@ -50,6 +50,13 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Aucun invité ne correspond. Vérifiez le nom exact de votre billet ou votre code invité à 5 caractères." },
       { status: 403 },
+    );
+  }
+
+  if (message && (await guestHasMessage(supabase, guest.id))) {
+    return NextResponse.json(
+      { error: "Vous avez déjà laissé un message. Supprimez-le depuis le mur pour en écrire un nouveau." },
+      { status: 400 },
     );
   }
 
@@ -134,5 +141,6 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     photosRestantes: await photosRestantes(supabase, guest.id),
+    hasMessage: await guestHasMessage(supabase, guest.id),
   });
 }
